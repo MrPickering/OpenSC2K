@@ -44,6 +44,75 @@ export default class viewport {
     this.camera.scrollX = -1531;
     this.camera.scrollY = 140;
     this.camera.zoom = 1;
+
+    // Touch controls state
+    this._pinchDistance = 0;
+    this._isDragging = false;
+    this._dragMoved = false;
+    this._dragThreshold = 8; // pixels before drag is recognized
+
+    this._setupTouchControls();
+  }
+
+
+  _setupTouchControls () {
+    let input = this.scene.input;
+
+    input.on('pointerdown', (pointer) => {
+      this._isDragging = true;
+      this._dragMoved = false;
+    });
+
+    input.on('pointermove', (pointer) => {
+      let pointer1 = input.pointer1;
+      let pointer2 = input.pointer2;
+
+      // Pinch-to-zoom with two fingers
+      if (pointer1.isDown && pointer2.isDown) {
+        let dist = Phaser.Math.Distance.Between(
+          pointer1.x, pointer1.y,
+          pointer2.x, pointer2.y
+        );
+
+        if (this._pinchDistance > 0) {
+          let zoomDelta = (dist - this._pinchDistance) * 0.003;
+          this.camera.zoom = Phaser.Math.Clamp(
+            this.camera.zoom + zoomDelta, 0.2, 3
+          );
+          this.cullObjects();
+        }
+
+        this._pinchDistance = dist;
+        this._dragMoved = true;
+        return;
+      }
+
+      this._pinchDistance = 0;
+
+      // Single-finger drag-to-pan
+      if (pointer.isDown && this._isDragging) {
+        let dx = pointer.x - pointer.prevPosition.x;
+        let dy = pointer.y - pointer.prevPosition.y;
+
+        if (Math.abs(dx) > 1 || Math.abs(dy) > 1) {
+          this._dragMoved = true;
+        }
+
+        this.camera.scrollX -= dx / this.camera.zoom;
+        this.camera.scrollY -= dy / this.camera.zoom;
+        this.cullObjects();
+      }
+    });
+
+    input.on('pointerup', () => {
+      this._isDragging = false;
+      this._pinchDistance = 0;
+    });
+  }
+
+
+  wasDragGesture () {
+    return this._dragMoved;
   }
 
 

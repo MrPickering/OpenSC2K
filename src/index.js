@@ -15,6 +15,9 @@ var config = {
   audio: {
     noAudio: true,
   },
+  input: {
+    activePointers: 2,
+  },
   render: {
     antialias: false,
     pixelArt: true,

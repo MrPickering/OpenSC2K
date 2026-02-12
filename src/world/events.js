@@ -32,6 +32,10 @@ export default class events {
 
 
   onPointerUp (pointer) {
+    // Don't trigger tool actions if the user was dragging to pan
+    if (this.scene.viewport && this.scene.viewport.wasDragGesture())
+      return;
+
     if (this.selectedTool)
       this.tools[this.selectedTool].onPointerUp(pointer);
   }
